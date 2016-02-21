@@ -1,0 +1,3 @@
+[run]
+include=*husky/*
+omit = husky.tests.*

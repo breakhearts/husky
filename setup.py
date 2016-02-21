@@ -7,5 +7,7 @@ setup(
         "console_scripts" : [
             'husky = husky.__main__:main'
         ]
-    }
+    },
+    setup_requires=['pytest-runner'],
+    tests_require = ['pytest']
 )
