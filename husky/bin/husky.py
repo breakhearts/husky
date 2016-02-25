@@ -1,6 +1,5 @@
 from __future__ import absolute_import
-from husky.asynctasks.celery import app
-from husky.asynctasks.tasks import add
+from husky.asynctasks.tasks import *
 
 def worker_main():
     app.worker_main()
