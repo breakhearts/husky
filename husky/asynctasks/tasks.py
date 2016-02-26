@@ -10,6 +10,6 @@ logging.config.dictConfig(settings.LOG_SETTINGS)
 @app.task(bind = True, max_retries = 10, default_retry_default = 0)
 def spider_task(self, page_url):
     try:
-        return 1
+        pass
     except Exception as exc:
         raise self.retry(exc=exc)

@@ -23,3 +23,6 @@ LOG_SETTINGS = {
         }
     }
 }
+
+PROXY_POOL_SERVER_HOST = "localhost"
+PROXY_POOL_LISTEN_PORT = 9000
