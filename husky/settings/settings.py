@@ -3,26 +3,82 @@ from husky.utils import utility
 LOG_ROOT = os.path.abspath(os.path.dirname(__file__) + "../../../logs")
 utility.wise_mk_dir(LOG_ROOT)
 
-DEBUG = True
+DEBUG = False
 
 LOG_SETTINGS = {
     'version' : 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'normal': {
+                'format': '[%(asctime)s]%(levelname)s,%(funcName)s,%(lineno)d,%(message)s'
+            },
+        },
     'handlers' : {
-        "husky.asynctasks.tasks" : {
+        'console': {
+            'formatter' : 'normal',
+            'class' : 'logging.StreamHandler',
+            'level' : 'DEBUG'
+        },
+        'exception' : {
+            'formatter' : 'normal',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'level' : "INFO",
-            'filename': os.path.join(LOG_ROOT, "husky.asynctasks.tasks.log"),
+            'level' : "ERROR",
+            'filename': os.path.join(LOG_ROOT, "exception"),
+            'when' : "D",
+            'interval' : 1
+        },
+        'husky.asynctasks.spider_tasks' : {
+            'formatter' : 'normal',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'level' : "DEBUG",
+            'filename': os.path.join(LOG_ROOT, "husky.asynctasks.spider_tasks.log"),
+            'when' : "D",
+            'interval' : 1
+        },
+        'husky.asynctasks.stock_tasks' : {
+            'formatter' : 'normal',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'level' : "DEBUG",
+            'filename': os.path.join(LOG_ROOT, "husky.asynctasks.stock_tasks.log"),
+            'when' : "D",
+            'interval' : 1
+        },
+        'husky.spiders.quotespider' : {
+            'formatter' : 'normal',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'level' : "DEBUG",
+            'filename': os.path.join(LOG_ROOT, "husky.spiders.quotespider.log"),
             'when' : "D",
             'interval' : 1
         }
     },
     'loggers' : {
-        "husky.asynctasks.tasks" : {
-            'handlers' : ["husky.asynctasks.tasks"]
+        'husky.asynctasks.spider_tasks' : {
+            'handlers' : ['husky.asynctasks.spider_tasks'],
+            'level': 'DEBUG'
+        },
+        'husky.asynctasks.stock_tasks' : {
+            'handlers' : ['husky.asynctasks.stock_tasks'],
+            'level': 'DEBUG'
+        },
+        'husky.spiders.quotespider' : {
+            'handlers' : ['husky.spiders.quotespider', 'console', 'exception'],
+            'level': 'DEBUG'
         }
     }
 }
 
-PROXY_POOL_SERVER_HOST = "localhost"
+from logging.config import dictConfig
+dictConfig(LOG_SETTINGS)
+
+PROXY_POOL_SERVER_HOST = "192.168.1.100"
 PROXY_POOL_LISTEN_PORT = 9000
+
+# stock spider settings
+STOCK_SPIDER_USE_PROXY = True
+STOCK_SPIDER_TASK_TIMEOUT = 5
+STOCK_SPIDER_PAGE_TIMEOUT = STOCK_SPIDER_TASK_TIMEOUT * 10
+STOCK_SPIDER_MAX_RETRY = 5
+
+# redis config
+REDIS_HOST = "192.168.1.100"
