@@ -27,11 +27,11 @@ class StockQuoteRedisModel(object):
 
     def _key_prefix(self, type, date, stock, time):
         if type == nasdaq.REAL_TIME_QUOTE:
-            return "real_time_quote:{0}:{1}:{2}".format(date, stock, time)
+            return "husky:real_time_quote:{0}:{1}:{2}".format(date, stock, time)
         elif type == nasdaq.AFTER_HOUR_QUOTE:
-            return "after_hour_quote:{0}:{1}:{2}".format(date, stock, time)
+            return "husky:after_hour_quote:{0}:{1}:{2}".format(date, stock, time)
         elif type == nasdaq.AFTER_HOUR_QUOTE:
-            return "pre_market_quote:{0}:{1}:{2}".format(date, stock, time)
+            return "husky:pre_market_quote:{0}:{1}:{2}".format(date, stock, time)
         return ""
 
     def _info_key(self, type, date, stock, time):
@@ -40,7 +40,7 @@ class StockQuoteRedisModel(object):
     def _data_key(self, type, date, stock, time):
         return self._key_prefix(type, date, stock, time) + ":data"
 
-    def rest(self, type, stock, date):
+    def rest_stock(self, type, stock, date):
         """
         clean all data
         """
@@ -84,13 +84,24 @@ class StockQuoteRedisModel(object):
                 return False
         return True
 
-    def load_page_result(self, type, stock, date, time):
+    def _load_time_data(self, type, stock, date, time):
         data_key = self._data_key(type, date, stock, time)
         t = self.client.hgetall(data_key)
         return t
 
-    def load_page_info(self):
-        pass
+    def load_stock(self, type, stock, date):
+        data = []
+        for i in range(1, nasdaq.get_time_slice_max(type) + 1):
+            _time = nasdaq.get_time_slice_max(type) - i + 1
+            if not self.check_time_finish(type, stock, date, _time):
+                return None
+            t = self._load_time_data(type, stock, date, _time)
+            keys = [int(key) for key in t.keys()]
+            keys.sort()
+            for key in keys:
+                data.extend(json.loads(t[str(key)]))
+        data.reverse()
+        return data
 
 def get_timer():
     _pre_time = [0]
@@ -102,3 +113,13 @@ def get_timer():
             return t - p
         return 0
     return timer
+
+if __name__ == "__main__":
+    redis_client = get_redis_client("42.159.27.71","8088",0)
+    stock_redis = StockQuoteRedisModel(redis_client)
+    t= stock_redis.load_stock(nasdaq.REAL_TIME_QUOTE, "baba", "2013-10-25")
+    print t
+    from copy import deepcopy
+    t1 = deepcopy(t)
+    t1.sort(key = lambda x:x[-1])
+    assert t == t1

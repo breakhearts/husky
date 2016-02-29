@@ -2,7 +2,7 @@ from lxml import etree
 
 REAL_TIME_QUOTE = 1
 AFTER_HOUR_QUOTE = 2
-PER_MARKET_QUOTE = 3
+PRE_MARKET_QUOTE = 3
 
 def real_time_quote_slice_url(code, time, page):
     return "http://www.nasdaq.com/symbol/%s/time-sales?time=%d&pageno=%d"%(code, time, page)
@@ -18,7 +18,7 @@ def quote_slice_url_by_type(type, code, time, page):
         return real_time_quote_slice_url(code, time, page)
     elif type == AFTER_HOUR_QUOTE:
         return after_hour_quote_slice_url(code, time, page)
-    elif type == PRE_MARKET_QUOTE_TIME_SLICE:
+    elif type == PRE_MARKET_QUOTE:
         return pre_market_quote_slice_url(code, time, page)
 
 def short_interest_url(code):
