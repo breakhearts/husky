@@ -2,7 +2,7 @@ import pytest
 from husky.models.redis_model import *
 @pytest.fixture(scope="module")
 def redis_client(request):
-    client = get_redis_client("localhost","8088",0)
+    client = get_redis_client("localhost","6379",0)
     return client
 
 class TestStockQuoteRedisModel:
