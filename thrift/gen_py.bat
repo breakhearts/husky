@@ -1,0 +1,1 @@
+thrift --gen py -out "../husky" rpc.thrift
