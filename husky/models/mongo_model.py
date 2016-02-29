@@ -1,10 +1,13 @@
 from pymongo import MongoClient
 from husky.api import nasdaq
+from husky.settings import settings
 import pymongo
 
 def get_mongo_client(host, port):
     client = MongoClient(host, port)
     return client
+
+mongo_client = get_mongo_client(settings.MONGO_HOST, settings.MONGO_PORT)
 
 class StockQuoteMongoModel(object):
     """

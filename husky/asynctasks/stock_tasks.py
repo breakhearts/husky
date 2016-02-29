@@ -5,6 +5,10 @@ from husky.settings import settings
 from husky.asynctasks.spider_tasks import spider_task
 from celery.utils.log import get_task_logger
 from celery.result import AsyncResult
+from husky.models.mongo_model import mongo_client, StockQuoteMongoModel
+from husky.models.redis_model import redis_client, StockQuoteRedisModel
+import json
+
 logger = get_task_logger(__name__)
 
 @app.task(bind = True)
@@ -83,12 +87,21 @@ def parse_stock_quote_page(self, args):
                 logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
                 spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
                                         link = parse_stock_quote_page.s(), link_error = spider_task_error_handler.s())
-    save_stock_quote_result.apply_async((_type, date, data, stock, time, page, last),
+    save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data),
                             link_error = save_stock_quote_error_handler.s())
 
 @app.task(bind = True)
-def save_stock_quote_result(self, type, date, data, stock, time, page, total_pages):
-    logger.debug("save stock_quote,%d %s %s %d %d %d", type, date, stock, time, page, total_pages)
+def save_stock_quote_result(self, type, date, stock, time, page, total_pages, data):
+    redis_model = StockQuoteRedisModel(redis_client)
+    if time == 1 and page == 1:
+        redis_model.remove_stock(type, stock, date)
+    redis_model.save_page_result(type, stock, date, time, page, total_pages, data)
+    if redis_model.check_stock_finish(type, stock, date):
+        mongo_model = StockQuoteMongoModel(mongo_client)
+        t = redis_model.load_stock(type, stock, date)
+        mongo_model.remove_stock(type, stock, date)
+        mongo_model.save_stock_quote(type, stock, date, t)
+    logger.debug("save stock_quote,%d %s %s %d %d %d %s", type, date, stock, time, page, total_pages, json.dumps(data))
 
 @app.task(bind = True)
 def save_stock_quote_error_handler(self, uuid):

@@ -8,10 +8,10 @@ def real_time_quote_slice_url(code, time, page):
     return "http://www.nasdaq.com/symbol/%s/time-sales?time=%d&pageno=%d"%(code, time, page)
 
 def pre_market_quote_slice_url(code, time, page):
-    return "http://www.nasdaq.com/us/symbol/%s/premarket?time=%d&page=%d"%(code, time, page)
+    return "http://www.nasdaq.com/zh/symbol/%s/premarket?time=%d&page=%d"%(code, time, page)
 
 def after_hour_quote_slice_url(code, time, page):
-    return "http://www.nasdaq.com/us/symbol/%s/after-hours?time=%d&page=%d"%(code, time, page)
+    return "http://www.nasdaq.com/zh/symbol/%s/after-hours?time=%d&page=%d"%(code, time, page)
 
 def quote_slice_url_by_type(type, code, time, page):
     if type == REAL_TIME_QUOTE:
@@ -100,7 +100,7 @@ def get_time_slice_max(type):
         return REAL_TIME_QUOTE_TIME_SLICE_MAX
     elif type == AFTER_HOUR_QUOTE:
         return AFTER_HOUR_QUOTE_TIME_SLICE_MAX
-    elif type == PRE_MARKET_QUOTE_TIME_SLICE_MAX:
+    elif type == PRE_MARKET_QUOTE:
         return PRE_MARKET_QUOTE_TIME_SLICE_MAX
     else:
         return None
