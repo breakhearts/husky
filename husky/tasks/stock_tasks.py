@@ -1,12 +1,13 @@
 from __future__ import absolute_import
-from husky.asynctasks.celery import app
+from husky.tasks.celery import app
 from husky.api import nasdaq
 from husky.settings import settings
-from husky.asynctasks.spider_tasks import spider_task
+from husky.tasks.spider_tasks import spider_task
 from celery.utils.log import get_task_logger
 from celery.result import AsyncResult
-from husky.models.mongo_model import mongo_client, StockQuoteMongoModel
+from husky.models.mongo_model import mongo_client, StockQuoteMongoModel, StockQuoteTaskMongoModel, FailedTaskModel
 from husky.models.redis_model import redis_client, StockQuoteRedisModel
+from celery import Task
 import json
 
 logger = get_task_logger(__name__)
@@ -24,15 +25,15 @@ def crawl_nasdaq_stock_quote(self, _type, stock):
     }
     logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
     spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,ext),
-                            link = parse_stock_quote_page.s(), link_error = spider_task_error_handler.s())
+                            link = parse_stock_quote_page.s())
 
-@app.task(bind = True)
-def spider_task_error_handler(self, uuid):
-    result = AsyncResult(uuid)
-    exc = result.get(propagate=True)
-    print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
+class ParseStockQuotePageTask(Task):
+    abstract = True
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        model = FailedTaskModel(mongo_client)
+        model.add("husky.tasks.stock_tasks.parse_stock_quote_page", repr(kwargs), repr(einfo))
 
-@app.task(bind = True)
+@app.task(base = ParseStockQuotePageTask, bind = True)
 def parse_stock_quote_page(self, args):
     status_code, content, ext = args
     _type,stock,time,page = ext["type"], ext["stock"], ext["time"], ext["page"]
@@ -43,10 +44,10 @@ def parse_stock_quote_page(self, args):
             page_url = nasdaq.quote_slice_url_by_type(_type, stock, time, page)
             logger.debug("_re_crawl_page,type=%d,page_url=%s,retries=%d",_type,page_url,ext["retries"])
             spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,ext),
-                                    link = parse_stock_quote_page.s(), link_error = spider_task_error_handler.s())
+                                    link = parse_stock_quote_page.s())
         else:
             logger.debug("max retries failed,status_code=%d,type=%d,stock=%s,time=%d,page=%d",status_code,_type,stock,time,page)
-            save_failed_task()
+            save_failed_time_quote_task(_type, stock, time, page, "STOCK_SPIDER_MAX_RETRY HIT")
 
     if status_code != 200:
         _re_crawl_page()
@@ -72,7 +73,7 @@ def parse_stock_quote_page(self, args):
             }
             logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
             spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
-                                    link = parse_stock_quote_page.s(), link_error = spider_task_error_handler.s())
+                                    link = parse_stock_quote_page.s())
         if ext["time"] == 1:
             # start crawl other times
             for time_no in range(2, nasdaq.get_time_slice_max(_type) + 1):
@@ -86,11 +87,16 @@ def parse_stock_quote_page(self, args):
                 }
                 logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
                 spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
-                                        link = parse_stock_quote_page.s(), link_error = spider_task_error_handler.s())
-    save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data),
-                            link_error = save_stock_quote_error_handler.s())
+                                        link = parse_stock_quote_page.s())
+    save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data))
 
-@app.task(bind = True)
+class SaveStockQuoteResultTask(Task):
+    abstract = True
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        model = FailedTaskModel(mongo_client)
+        model.add("husky.tasks.stock_tasks.save_stock_quote_result", repr(kwargs), repr(exc))
+
+@app.task(base = SaveStockQuoteResultTask, bind = True)
 def save_stock_quote_result(self, type, date, stock, time, page, total_pages, data):
     redis_model = StockQuoteRedisModel(redis_client)
     if time == 1 and page == 1:
@@ -104,10 +110,15 @@ def save_stock_quote_result(self, type, date, stock, time, page, total_pages, da
     logger.debug("save stock_quote,%d %s %s %d %d %d %s", type, date, stock, time, page, total_pages, json.dumps(data))
 
 @app.task(bind = True)
-def save_stock_quote_error_handler(self, uuid):
-    result = AsyncResult(uuid)
-    exc = result.get(propagate=True)
-    print('Task {0} raised exception: {1!r}\n{2!r}'.format(uuid, exc, result.traceback))
+def crawl_nasdaq_stock_quote_batch(self, _type):
+    mongo_model = StockQuoteTaskMongoModel(mongo_client)
+    for stock in mongo_model.load_stocks():
+        crawl_nasdaq_stock_quote(_type, stock)
 
-def save_failed_task():
-    pass
+def save_failed_time_quote_task(_type, stock, _time, page, reason):
+    model = FailedTaskModel(mongo_client)
+    model.add("time_quote_task", {
+        "type" : _type,
+        "time" : _time,
+        "page" : page
+    }, reason)

@@ -1,5 +1,5 @@
-from husky.asynctasks.stock_tasks import crawl_nasdaq_stock_quote
-from husky.asynctasks.stock_tasks import spider_task
+from husky.tasks.stock_tasks import crawl_nasdaq_stock_quote
+from husky.tasks.stock_tasks import spider_task
 from husky.api import nasdaq
 from husky.models.mongo_model import mongo_client, StockQuoteMongoModel
 #StockQuoteMongoModel(mongo_client).init_db()

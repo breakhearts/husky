@@ -27,19 +27,19 @@ LOG_SETTINGS = {
             'when' : "D",
             'interval' : 1
         },
-        'husky.asynctasks.spider_tasks' : {
+        'husky.tasks.spider_tasks' : {
             'formatter' : 'normal',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'level' : "DEBUG",
-            'filename': os.path.join(LOG_ROOT, "husky.asynctasks.spider_tasks.log"),
+            'filename': os.path.join(LOG_ROOT, "husky.tasks.spider_tasks.log"),
             'when' : "D",
             'interval' : 1
         },
-        'husky.asynctasks.stock_tasks' : {
+        'husky.tasks.stock_tasks' : {
             'formatter' : 'normal',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'level' : "DEBUG",
-            'filename': os.path.join(LOG_ROOT, "husky.asynctasks.stock_tasks.log"),
+            'filename': os.path.join(LOG_ROOT, "husky.tasks.stock_tasks.log"),
             'when' : "D",
             'interval' : 1
         },
@@ -53,12 +53,12 @@ LOG_SETTINGS = {
         }
     },
     'loggers' : {
-        'husky.asynctasks.spider_tasks' : {
-            'handlers' : ['husky.asynctasks.spider_tasks'],
+        'husky.tasks.spider_tasks' : {
+            'handlers' : ['husky.tasks.spider_tasks'],
             'level': 'DEBUG'
         },
-        'husky.asynctasks.stock_tasks' : {
-            'handlers' : ['husky.asynctasks.stock_tasks'],
+        'husky.tasks.stock_tasks' : {
+            'handlers' : ['husky.tasks.stock_tasks'],
             'level': 'DEBUG'
         },
         'husky.spiders.quotespider' : {

@@ -42,3 +42,23 @@ class TestStockQuoteMongoModel:
             t =  model.load_stock_quote(_type, "baba", "2013-12-11")
             assert not t
 
+class TestStockQuoteTaskModel:
+    def test_all(self, mongo_client):
+        model = StockQuoteTaskMongoModel(mongo_client)
+        model.init_db()
+        model.add_stock("baba")
+        model.add_stock("bidu")
+        assert len(model.load_stocks()) == 2
+        model.remove_stock("bidu")
+        assert len(model.load_stocks()) == 1
+
+class TestFailedTaskModel:
+    def test_all(self, mongo_client):
+        model = FailedTaskModel(mongo_client)
+        model.init_db()
+        model.add("time_quote", {
+            "stock" : "baba",
+            "time" : 1,
+            "page" : 1
+        }, "sss")
+
