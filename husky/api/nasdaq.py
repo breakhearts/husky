@@ -2,23 +2,23 @@ from lxml import etree
 
 REAL_TIME_QUOTE = 1
 AFTER_HOUR_QUOTE = 2
-PER_MARKET_QUOTE = 3
+PRE_MARKET_QUOTE = 3
 
 def real_time_quote_slice_url(code, time, page):
     return "http://www.nasdaq.com/symbol/%s/time-sales?time=%d&pageno=%d"%(code, time, page)
 
 def pre_market_quote_slice_url(code, time, page):
-    return "http://www.nasdaq.com/us/symbol/%s/premarket?time=%d&page=%d"%(code, time, page)
+    return "http://www.nasdaq.com/zh/symbol/%s/premarket?time=%d&page=%d"%(code, time, page)
 
 def after_hour_quote_slice_url(code, time, page):
-    return "http://www.nasdaq.com/us/symbol/%s/after-hours?time=%d&page=%d"%(code, time, page)
+    return "http://www.nasdaq.com/zh/symbol/%s/after-hours?time=%d&page=%d"%(code, time, page)
 
 def quote_slice_url_by_type(type, code, time, page):
     if type == REAL_TIME_QUOTE:
         return real_time_quote_slice_url(code, time, page)
     elif type == AFTER_HOUR_QUOTE:
         return after_hour_quote_slice_url(code, time, page)
-    elif type == PRE_MARKET_QUOTE_TIME_SLICE:
+    elif type == PRE_MARKET_QUOTE:
         return pre_market_quote_slice_url(code, time, page)
 
 def short_interest_url(code):
@@ -100,7 +100,7 @@ def get_time_slice_max(type):
         return REAL_TIME_QUOTE_TIME_SLICE_MAX
     elif type == AFTER_HOUR_QUOTE:
         return AFTER_HOUR_QUOTE_TIME_SLICE_MAX
-    elif type == PRE_MARKET_QUOTE_TIME_SLICE_MAX:
+    elif type == PRE_MARKET_QUOTE:
         return PRE_MARKET_QUOTE_TIME_SLICE_MAX
     else:
         return None

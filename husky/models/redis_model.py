@@ -1,11 +1,14 @@
 from __future__ import absolute_import
 import redis
 from husky.api import nasdaq
+from husky.settings import settings
 import json
 import time
 def get_redis_client(host, port, db):
     client = redis.StrictRedis(host=host, port=port, db=db)
     return client
+
+redis_client = get_redis_client(settings.REDIS_HOST, settings.REDIS_PORT, settings.REDIS_DB)
 
 class StockQuoteRedisModel(object):
     """
@@ -27,11 +30,11 @@ class StockQuoteRedisModel(object):
 
     def _key_prefix(self, type, date, stock, time):
         if type == nasdaq.REAL_TIME_QUOTE:
-            return "real_time_quote:{0}:{1}:{2}".format(date, stock, time)
+            return "husky:real_time_quote:{0}:{1}:{2}".format(date, stock, time)
         elif type == nasdaq.AFTER_HOUR_QUOTE:
-            return "after_hour_quote:{0}:{1}:{2}".format(date, stock, time)
-        elif type == nasdaq.AFTER_HOUR_QUOTE:
-            return "pre_market_quote:{0}:{1}:{2}".format(date, stock, time)
+            return "husky:after_hour_quote:{0}:{1}:{2}".format(date, stock, time)
+        elif type == nasdaq.PRE_MARKET_QUOTE:
+            return "husky:pre_market_quote:{0}:{1}:{2}".format(date, stock, time)
         return ""
 
     def _info_key(self, type, date, stock, time):
@@ -40,7 +43,7 @@ class StockQuoteRedisModel(object):
     def _data_key(self, type, date, stock, time):
         return self._key_prefix(type, date, stock, time) + ":data"
 
-    def rest(self, type, stock, date):
+    def remove_stock(self, type, stock, date):
         """
         clean all data
         """
@@ -84,13 +87,24 @@ class StockQuoteRedisModel(object):
                 return False
         return True
 
-    def load_page_result(self, type, stock, date, time):
+    def _load_time_data(self, type, stock, date, time):
         data_key = self._data_key(type, date, stock, time)
         t = self.client.hgetall(data_key)
         return t
 
-    def load_page_info(self):
-        pass
+    def load_stock(self, type, stock, date):
+        data = []
+        for i in range(1, nasdaq.get_time_slice_max(type) + 1):
+            _time = nasdaq.get_time_slice_max(type) - i + 1
+            if not self.check_time_finish(type, stock, date, _time):
+                return None
+            t = self._load_time_data(type, stock, date, _time)
+            keys = [int(key) for key in t.keys()]
+            keys.sort()
+            for key in keys:
+                data.extend(json.loads(t[str(key)]))
+        data.reverse()
+        return data
 
 def get_timer():
     _pre_time = [0]

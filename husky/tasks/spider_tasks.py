@@ -1,12 +1,20 @@
 from __future__ import absolute_import
-from husky.asynctasks.celery import app
+from husky.tasks.celery import app
 from celery.utils.log import get_task_logger
 import requests
 from husky.utils import utility
 from husky.rpc.client import get_rpc_client
+from husky.models.mongo_model import mongo_client, FailedTaskModel
+from celery import Task
 logger = get_task_logger(__name__)
 
-@app.task(bind = True, max_retries = 100, default_retry_delay = 1)
+class SpiderTask(Task):
+    abstract = True
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        model = FailedTaskModel(mongo_client)
+        model.add("husky.tasks.spider_tasks.spider_task", repr(kwargs), repr(einfo))
+
+@app.task(base = SpiderTask, bind = True, max_retries = 100, default_retry_delay = 1)
 def spider_task(self, page_url, use_proxy, timeout, ext):
     logger.debug("start spider page,page_url = %s,id=%s,retries=%d", page_url,self.request.id,self.request.retries)
     rpc_client = None
