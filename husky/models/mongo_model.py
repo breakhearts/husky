@@ -47,9 +47,9 @@ class StockQuoteMongoModel(object):
     def save_stock_quote(self, type, stock, date, data):
         collection = self.db[self.get_collection_name(type)]
         collection.insert({
-            "stock" : stock,
-            "date" : date,
-            "data" : data
+            "stock": stock,
+            "date": date,
+            "data": data
         })
 
     def load_stock_quote(self, type, stock, date):
@@ -140,7 +140,3 @@ class FailedTaskModel(object):
     def get_all(self):
         collection = self.db[self.get_collection_name()]
         return collection.find()
-
-if __name__ == "__main__":
-    client = StockQuoteMongoModel(mongo_client)
-    print client.load_stock_quote(nasdaq.REAL_TIME_QUOTE, "bidu", "2016-03-01")
