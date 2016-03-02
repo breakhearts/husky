@@ -16,6 +16,6 @@ CELERYBEAT_SCHEDULE = {
     'crawl-nasdaq-stock-time-quote': {
         'task': 'husky.tasks.stock_tasks.crawl_nasdaq_stock_quote_batch',
         'schedule': crontab(hour=17, minute=0, day_of_week = '1-5'),
-        'args' : nasdaq.REAL_TIME_QUOTE
+        'args' : (nasdaq.REAL_TIME_QUOTE,)
     },
 }
