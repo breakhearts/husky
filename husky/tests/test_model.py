@@ -56,7 +56,7 @@ class TestFailedTaskModel:
     def test_all(self, mongo_client):
         model = FailedTaskModel(mongo_client)
         model.init_db()
-        model.add("time_quote", {
+        model.add("time_quote", "", {
             "stock" : "baba",
             "time" : 1,
             "page" : 1
