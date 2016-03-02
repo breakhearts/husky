@@ -5,7 +5,7 @@ import pymongo
 from datetime import datetime
 
 def get_mongo_client(host, port):
-    client = MongoClient(host, port)
+    client = MongoClient(host, port, connect=False)
     return client
 
 mongo_client = get_mongo_client(settings.MONGO_HOST, settings.MONGO_PORT)
