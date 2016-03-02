@@ -12,7 +12,7 @@ class SpiderTask(Task):
     abstract = True
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
-        model.add("husky.tasks.spider_tasks.spider_task", repr(kwargs), repr(einfo))
+        model.add("husky.tasks.spider_tasks.spider_task", repr(args), repr(kwargs), repr(einfo))
 
 @app.task(base = SpiderTask, bind = True, max_retries = 100, default_retry_delay = 1)
 def spider_task(self, page_url, use_proxy, timeout, ext):
@@ -38,7 +38,7 @@ def spider_task(self, page_url, use_proxy, timeout, ext):
             "user-agent" : utility.random_ua()
         }
         try:
-            r = requests.get(page_url, proxies = proxies, headers = headers, timeout = timeout)
+            r = requests.get(page_url, proxies=proxies, headers=headers, timeout = timeout)
         except Exception as exc:
             logger.error("request error, page_url = %s", page_url)
             if rpc_client:

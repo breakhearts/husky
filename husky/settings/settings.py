@@ -86,5 +86,5 @@ REDIS_PORT = "6379"
 REDIS_DB = 0
 
 # mongo config
-MONGO_HOST = "localhost"
+MONGO_HOST = "192.168.1.100"
 MONGO_PORT = 27017

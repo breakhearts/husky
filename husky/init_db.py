@@ -4,5 +4,27 @@ model = StockQuoteMongoModel(mongo_client)
 model.init_db()
 model = StockQuoteTaskMongoModel(mongo_client)
 model.init_db()
-for stock in ("baba", "fb", "bidu"):
+stocks = (
+    'aapl',
+    'goog',
+    'amzn',
+    'fb',
+    'baba',
+    'jd',
+    'bidu',
+    'ntes',
+    'twtr',
+    'qihu',
+    'lc',
+    'sfun',
+    'vips',
+    'pypl',
+    'wb',
+    'sina',
+    'sohu',
+    'tour',
+    'bita',
+    'cmcm'
+)
+for stock in stocks:
     model.add_stock(stock)

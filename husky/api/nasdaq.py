@@ -4,6 +4,7 @@ REAL_TIME_QUOTE = 1
 AFTER_HOUR_QUOTE = 2
 PRE_MARKET_QUOTE = 3
 
+
 def real_time_quote_slice_url(code, time, page):
     return "http://www.nasdaq.com/symbol/%s/time-sales?time=%d&pageno=%d"%(code, time, page)
 

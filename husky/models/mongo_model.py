@@ -33,7 +33,7 @@ class StockQuoteMongoModel(object):
         for _type in (nasdaq.REAL_TIME_QUOTE, nasdaq.AFTER_HOUR_QUOTE, nasdaq.PRE_MARKET_QUOTE):
             self.db.drop_collection(self.get_collection_name(_type))
             collection = self.db[self.get_collection_name(_type)]
-            collection.create_index([('stock', pymongo.ASCENDING) , ('date', pymongo.ASCENDING)], unique = True)
+            collection.create_index([('stock', pymongo.ASCENDING), ('date', pymongo.ASCENDING)], unique = True)
 
     def get_collection_name(self, type):
         if type == nasdaq.REAL_TIME_QUOTE:
@@ -55,8 +55,8 @@ class StockQuoteMongoModel(object):
     def load_stock_quote(self, type, stock, date):
         collection = self.db[self.get_collection_name(type)]
         t = collection.find_one({
-            "stock" : stock,
-            "date" : date
+            "stock": stock,
+            "date": date
         })
         return t
 
@@ -101,7 +101,7 @@ class StockQuoteTaskMongoModel(object):
     def remove_stock(self, stock):
         collection = self.db[self.get_collection_name()]
         collection.remove({
-            "symbol" : stock
+            "symbol": stock
         })
 
     def load_stocks(self):
@@ -127,15 +127,20 @@ class FailedTaskModel(object):
     def get_collection_name(self):
         return "failed_tasks"
 
-    def add(self, _type, kwargs, reason):
+    def add(self, _type, args, kwargs, reason):
        collection = self.db[self.get_collection_name()]
        collection.insert({
-           "type" : _type,
-           "kwargs" : kwargs,
-           "reason" : reason,
-           "time" : datetime.now()
+           "type": _type,
+           "args": args,
+           "kwargs": kwargs,
+           "reason": reason,
+           "time": datetime.now()
        })
 
     def get_all(self):
         collection = self.db[self.get_collection_name()]
         return collection.find()
+
+if __name__ == "__main__":
+    client = StockQuoteMongoModel(mongo_client)
+    print client.load_stock_quote(nasdaq.REAL_TIME_QUOTE, "bidu", "2016-03-01")

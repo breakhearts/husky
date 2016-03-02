@@ -31,7 +31,7 @@ class ParseStockQuotePageTask(Task):
     abstract = True
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
-        model.add("husky.tasks.stock_tasks.parse_stock_quote_page", repr(kwargs), repr(einfo))
+        model.add("husky.tasks.stock_tasks.parse_stock_quote_page", repr(args), repr(kwargs), repr(einfo))
 
 @app.task(base = ParseStockQuotePageTask, bind = True)
 def parse_stock_quote_page(self, args):
@@ -94,7 +94,7 @@ class SaveStockQuoteResultTask(Task):
     abstract = True
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
-        model.add("husky.tasks.stock_tasks.save_stock_quote_result", repr(kwargs), repr(exc))
+        model.add("husky.tasks.stock_tasks.save_stock_quote_result", repr(args), repr(kwargs), repr(exc))
 
 @app.task(base = SaveStockQuoteResultTask, bind = True)
 def save_stock_quote_result(self, type, date, stock, time, page, total_pages, data):
@@ -117,8 +117,8 @@ def crawl_nasdaq_stock_quote_batch(self, _type):
 
 def save_failed_time_quote_task(_type, stock, _time, page, reason):
     model = FailedTaskModel(mongo_client)
-    model.add("time_quote_task", {
-        "type" : _type,
-        "time" : _time,
-        "page" : page
+    model.add("time_quote_task", "", {
+        "type": _type,
+        "time": _time,
+        "page": page
     }, reason)
