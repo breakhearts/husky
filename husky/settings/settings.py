@@ -6,63 +6,63 @@ utility.wise_mk_dir(LOG_ROOT)
 DEBUG = False
 
 LOG_SETTINGS = {
-    'version' : 1,
+    'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'normal': {
                 'format': '[%(asctime)s]%(levelname)s,%(funcName)s,%(lineno)d,%(message)s'
             },
         },
-    'handlers' : {
+    'handlers': {
         'console': {
-            'formatter' : 'normal',
-            'class' : 'logging.StreamHandler',
-            'level' : 'DEBUG'
+            'formatter': 'normal',
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG'
         },
-        'exception' : {
-            'formatter' : 'normal',
+        'exception': {
+            'formatter': 'normal',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'level' : "ERROR",
+            'level': "ERROR",
             'filename': os.path.join(LOG_ROOT, "exception"),
-            'when' : "D",
-            'interval' : 1
+            'when': "D",
+            'interval': 1
         },
-        'husky.tasks.spider_tasks' : {
-            'formatter' : 'normal',
+        'husky.tasks.spider_tasks': {
+            'formatter': 'normal',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'level' : "DEBUG",
+            'level': "DEBUG",
             'filename': os.path.join(LOG_ROOT, "husky.tasks.spider_tasks.log"),
-            'when' : "D",
-            'interval' : 1
+            'when': "D",
+            'interval': 1
         },
-        'husky.tasks.stock_tasks' : {
-            'formatter' : 'normal',
+        'husky.tasks.stock_quote_tasks': {
+            'formatter': 'normal',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'level' : "DEBUG",
-            'filename': os.path.join(LOG_ROOT, "husky.tasks.stock_tasks.log"),
-            'when' : "D",
-            'interval' : 1
+            'level': "DEBUG",
+            'filename': os.path.join(LOG_ROOT, "husky.tasks.stock_quote_tasks.log"),
+            'when': "D",
+            'interval': 1
         },
-        'husky.spiders.quotespider' : {
-            'formatter' : 'normal',
+        'husky.tasks.stock_history_tasks': {
+            'formatter': 'normal',
             'class': 'logging.handlers.TimedRotatingFileHandler',
-            'level' : "DEBUG",
-            'filename': os.path.join(LOG_ROOT, "husky.spiders.quotespider.log"),
-            'when' : "D",
-            'interval' : 1
+            'level': "DEBUG",
+            'filename': os.path.join(LOG_ROOT, "husky.spiders.stock_history_tasks.log"),
+            'when': "D",
+            'interval': 1
         }
     },
-    'loggers' : {
-        'husky.tasks.spider_tasks' : {
-            'handlers' : ['husky.tasks.spider_tasks'],
+    'loggers': {
+        'husky.tasks.spider_tasks': {
+            'handlers': ['husky.tasks.spider_tasks'],
             'level': 'DEBUG'
         },
-        'husky.tasks.stock_tasks' : {
-            'handlers' : ['husky.tasks.stock_tasks'],
+        'husky.tasks.stock_quote_tasks': {
+            'handlers': ['husky.tasks.stock_quote_tasks'],
             'level': 'DEBUG'
         },
-        'husky.spiders.quotespider' : {
-            'handlers' : ['husky.spiders.quotespider', 'console', 'exception'],
+        'husky.tasks.stock_history_tasks': {
+            'handlers': ['husky.tasks.stock_history_tasks'],
             'level': 'DEBUG'
         }
     }
@@ -89,5 +89,4 @@ REDIS_DB = 0
 MONGO_HOST = "192.168.1.100"
 MONGO_PORT = 27017
 
-# stock quote file root
 STOCK_QUOTE_ROOT = os.path.abspath(os.path.dirname(__file__) + "../../../data/stock_quotes")

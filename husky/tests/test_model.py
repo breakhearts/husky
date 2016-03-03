@@ -13,6 +13,7 @@ def mongo_client(request):
     client = get_mongo_client("localhost", 27017)
     return client
 
+
 class TestStockQuoteRedisModel:
     def test_all(self,redis_client):
         stock_redis = StockQuoteRedisModel(redis_client)
@@ -32,6 +33,7 @@ class TestStockQuoteRedisModel:
             t1.sort(key = lambda x:x[-1])
             assert t == t1
 
+
 class TestStockQuoteMongoModel:
     def test_all(self,mongo_client):
         model = StockQuoteMongoModel(mongo_client)
@@ -44,21 +46,6 @@ class TestStockQuoteMongoModel:
             t =  model.load_stock_quote(_type, "baba", "2013-12-11")
             assert not t
 
-class TestStockQuoteFileModel:
-    def test_all(self):
-        import shutil
-        if os.path.exists("stock_root"):
-            shutil.rmtree("stock_root")
-        model = StockQuoteFileModel("stock_root")
-        for _type in (nasdaq.REAL_TIME_QUOTE, nasdaq.PRE_MARKET_QUOTE, nasdaq.AFTER_HOUR_QUOTE):
-            model.save_stock_quote(_type, "baba", "2013-12-11", [[u'15:01:11', 25.13, 100000], [u'15:01:10', 25.13, 100001], [u'15:01:12', 25.13, 100010], [u'15:01:15', 25.13, 100011]])
-            t =  model.load_stock_quote(_type, "baba", "2013-12-11")
-            assert len(t["data"]) == 4
-            model.remove_stock(_type, "baba", "2013-12-11")
-            t =  model.load_stock_quote(_type, "baba", "2013-12-11")
-            assert not t
-        if os.path.exists("stock_root"):
-            shutil.rmtree("stock_root")
 
 class TestStockQuoteTaskModel:
     def test_all(self, mongo_client):
@@ -70,6 +57,7 @@ class TestStockQuoteTaskModel:
         model.remove_stock("bidu")
         assert len(model.load_stocks()) == 1
 
+
 class TestFailedTaskModel:
     def test_all(self, mongo_client):
         model = FailedTaskModel(mongo_client)
@@ -79,4 +67,21 @@ class TestFailedTaskModel:
             "time" : 1,
             "page" : 1
         }, "sss")
+
+
+class TestStockQuoteFileModel:
+    def test_all(self):
+        import shutil
+        if os.path.exists("stock_root"):
+            shutil.rmtree("stock_root")
+        model = StockQuoteFileModel("stock_root")
+        for _type in (nasdaq.REAL_TIME_QUOTE, nasdaq.PRE_MARKET_QUOTE, nasdaq.AFTER_HOUR_QUOTE):
+            model.save_stock_quote(_type, "baba", "2013-12-11", [[u'15:01:11', 25.13, 100000], [u'15:01:10', 25.13, 100001], [u'15:01:12', 25.13, 100010], [u'15:01:15', 25.13, 100011]])
+            t = model.load_stock_quote(_type, "baba", "2013-12-11")
+            assert len(t["data"]) == 4
+            model.remove_stock(_type, "baba", "2013-12-11")
+            t =  model.load_stock_quote(_type, "baba", "2013-12-11")
+            assert not t
+        if os.path.exists("stock_root"):
+            shutil.rmtree("stock_root")
 

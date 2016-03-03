@@ -31,7 +31,7 @@ class ParseStockQuotePageTask(Task):
     abstract = True
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
-        model.add("husky.tasks.stock_tasks.parse_stock_quote_page", repr(args), repr(kwargs), repr(einfo))
+        model.add("husky.tasks.stock_quote_tasks.parse_stock_quote_page", repr(args), repr(kwargs), repr(einfo))
 
 @app.task(base = ParseStockQuotePageTask, bind = True)
 def parse_stock_quote_page(self, args):
@@ -94,7 +94,7 @@ class SaveStockQuoteResultTask(Task):
     abstract = True
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
-        model.add("husky.tasks.stock_tasks.save_stock_quote_result", repr(args), repr(kwargs), repr(exc))
+        model.add("husky.tasks.stock_quote_tasks.save_stock_quote_result", repr(args), repr(kwargs), repr(exc))
 
 @app.task(base = SaveStockQuoteResultTask, bind = True)
 def save_stock_quote_result(self, type, date, stock, time, page, total_pages, data):
@@ -109,11 +109,6 @@ def save_stock_quote_result(self, type, date, stock, time, page, total_pages, da
         file_model.save_stock_quote(type, stock, date, t)
     logger.debug("save stock_quote,%d %s %s %d %d %d %s", type, date, stock, time, page, total_pages, json.dumps(data))
 
-@app.task(bind = True)
-def crawl_nasdaq_stock_quote_batch(self, _type):
-    mongo_model = StockQuoteTaskMongoModel(mongo_client)
-    for stock in mongo_model.load_stocks():
-        crawl_nasdaq_stock_quote(_type, stock)
 
 def save_failed_time_quote_task(_type, stock, _time, page, reason):
     model = FailedTaskModel(mongo_client)
