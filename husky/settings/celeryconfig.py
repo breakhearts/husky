@@ -22,8 +22,8 @@ CELERYBEAT_SCHEDULE = {
 CELERY_DEFAULT_QUEUE = 'default'
 CELERY_QUEUES = (
         Queue('default', Exchange('default'), routing_key='default'),
-        Queue('spider_tasks', Exchange('spider_task', routing_key='spider_tasks.#')),
-        Queue('stock_tasks', Exchange('stock_task', routing_key='stock_tasks.#'))
+        Queue('spider_tasks', Exchange('spider_task'), routing_key='spider_tasks.#'),
+        Queue('stock_tasks', Exchange('stock_task'), routing_key='stock_tasks.#')
 )
 
 
