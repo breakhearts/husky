@@ -1,6 +1,8 @@
 import pytest
 from husky.models.redis_model import *
 from husky.models.mongo_model import *
+from husky.models.file_models import *
+
 @pytest.fixture(scope="module")
 def redis_client(request):
     client = get_redis_client("localhost","6379",0)
@@ -41,6 +43,22 @@ class TestStockQuoteMongoModel:
             model.remove_stock(_type, "baba", "2013-12-11")
             t =  model.load_stock_quote(_type, "baba", "2013-12-11")
             assert not t
+
+class TestStockQuoteFileModel:
+    def test_all(self):
+        import shutil
+        if os.path.exists("stock_root"):
+            shutil.rmtree("stock_root")
+        model = StockQuoteFileModel("stock_root")
+        for _type in (nasdaq.REAL_TIME_QUOTE, nasdaq.PRE_MARKET_QUOTE, nasdaq.AFTER_HOUR_QUOTE):
+            model.save_stock_quote(_type, "baba", "2013-12-11", [[u'15:01:11', 25.13, 100000], [u'15:01:10', 25.13, 100001], [u'15:01:12', 25.13, 100010], [u'15:01:15', 25.13, 100011]])
+            t =  model.load_stock_quote(_type, "baba", "2013-12-11")
+            assert len(t["data"]) == 4
+            model.remove_stock(_type, "baba", "2013-12-11")
+            t =  model.load_stock_quote(_type, "baba", "2013-12-11")
+            assert not t
+        if os.path.exists("stock_root"):
+            shutil.rmtree("stock_root")
 
 class TestStockQuoteTaskModel:
     def test_all(self, mongo_client):

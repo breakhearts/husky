@@ -88,3 +88,6 @@ REDIS_DB = 0
 # mongo config
 MONGO_HOST = "192.168.1.100"
 MONGO_PORT = 27017
+
+# stock quote file root
+STOCK_QUOTE_ROOT = os.path.abspath(os.path.dirname(__file__) + "../../../data/stock_quotes")
