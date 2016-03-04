@@ -12,13 +12,13 @@ CELERY_DISABLE_RATE_LIMITS = True
 BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True, 'fanout_patterns': True, 'visibility_timeout': 43200}
 CELERY_TIMEZONE = 'US/Eastern'
 CELERYBEAT_SCHEDULE = {
-    'crawl-nasdaq-stock-time-quote': {
-        'task': 'husky.tasks.stock_quote_tasks.crawl_nasdaq_stock_quote_batch',
+    'update_real_time_quote': {
+        'task': 'husky.tasks.beat_tasks.update_real_time_quote',
         'schedule': crontab(hour=17, minute=0, day_of_week='1-5'),
         'args': (nasdaq.REAL_TIME_QUOTE,)
     },
-    'update-nasdaq-stock-hisory': {
-        'task': 'husky.tasks.stock_history_tasks.update_all_stock_history',
+    'update_history': {
+        'task': 'husky.tasks.beat_tasks.update_history',
         'schedule': crontab(hour=0, minute=0, day_of_week='1-5')
     },
 }
