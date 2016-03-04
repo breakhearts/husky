@@ -4,8 +4,6 @@ model = StockQuoteMongoModel(mongo_client)
 model.init_db()
 model = StockQuoteTaskMongoModel(mongo_client)
 model.init_db()
-model = StockHistoryMongoModel(mongo_client)
-model.init_db()
 stocks = (
     'aapl',
     'goog',
@@ -30,3 +28,5 @@ stocks = (
 )
 for stock in stocks:
     model.add_stock(stock)
+model = StockHistoryMongoModel(mongo_client)
+model.init_db()
