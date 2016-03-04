@@ -1,8 +1,10 @@
-from husky.models.mongo_model import StockQuoteMongoModel, StockQuoteTaskMongoModel, mongo_client
+from husky.models.mongo_model import StockQuoteMongoModel, StockQuoteTaskMongoModel, StockHistoryMongoModel, mongo_client
 
 model = StockQuoteMongoModel(mongo_client)
 model.init_db()
 model = StockQuoteTaskMongoModel(mongo_client)
+model.init_db()
+model = StockHistoryMongoModel(mongo_client)
 model.init_db()
 stocks = (
     'aapl',

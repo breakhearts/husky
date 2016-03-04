@@ -12,6 +12,7 @@ import json
 
 logger = get_task_logger(__name__)
 
+
 @app.task(bind = True)
 def crawl_nasdaq_stock_quote(self, _type, stock):
     logger.debug("start crawl stock quote,type=%d,stock=%s",_type,stock)
@@ -27,17 +28,20 @@ def crawl_nasdaq_stock_quote(self, _type, stock):
     spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,ext),
                             link = parse_stock_quote_page.s())
 
+
 class ParseStockQuotePageTask(Task):
     abstract = True
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
         model.add("husky.tasks.stock_quote_tasks.parse_stock_quote_page", repr(args), repr(kwargs), repr(einfo))
 
-@app.task(base = ParseStockQuotePageTask, bind = True)
+
+@app.task(base=ParseStockQuotePageTask, bind = True)
 def parse_stock_quote_page(self, args):
     status_code, content, ext = args
-    _type,stock,time,page = ext["type"], ext["stock"], ext["time"], ext["page"]
+    _type, stock, time, page = ext["type"], ext["stock"], ext["time"], ext["page"]
     logger.debug("parse stock quote page,status_code=%d,type=%d,stock=%s,time=%d,page=%d,id=%s",status_code,_type,stock,time,page,self.request.id)
+
     def _re_crawl_page():
         if ext["retries"] < settings.STOCK_SPIDER_MAX_RETRY:
             ext["retries"] += 1
@@ -90,11 +94,13 @@ def parse_stock_quote_page(self, args):
                                         link = parse_stock_quote_page.s())
     save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data))
 
+
 class SaveStockQuoteResultTask(Task):
     abstract = True
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
         model.add("husky.tasks.stock_quote_tasks.save_stock_quote_result", repr(args), repr(kwargs), repr(exc))
+
 
 @app.task(base = SaveStockQuoteResultTask, bind = True)
 def save_stock_quote_result(self, type, date, stock, time, page, total_pages, data):
@@ -117,3 +123,10 @@ def save_failed_time_quote_task(_type, stock, _time, page, reason):
         "time": _time,
         "page": page
     }, reason)
+
+
+@app.task(bind = True)
+def crawl_nasdaq_stock_quote_batch(self, _type):
+    mongo_model = StockQuoteTaskMongoModel(mongo_client)
+    for stock in mongo_model.load_stocks():
+        crawl_nasdaq_stock_quote(_type, stock)

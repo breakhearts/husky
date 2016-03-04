@@ -13,9 +13,13 @@ BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True, 'fanout_patterns': True, 'vis
 CELERY_TIMEZONE = 'US/Eastern'
 CELERYBEAT_SCHEDULE = {
     'crawl-nasdaq-stock-time-quote': {
-        'task': 'husky.tasks.beat_tasks.crawl_nasdaq_stock_quote_batch',
+        'task': 'husky.tasks.stock_quote_tasks.crawl_nasdaq_stock_quote_batch',
         'schedule': crontab(hour=17, minute=0, day_of_week='1-5'),
         'args': (nasdaq.REAL_TIME_QUOTE,)
+    },
+    'update-nasdaq-stock-hisory': {
+        'task': 'husky.tasks.stock_history_tasks.update_all_stock_history',
+        'schedule': crontab(hour=0, minute=0, day_of_week='1-5')
     },
 }
 
@@ -45,12 +49,16 @@ CELERY_ROUTES = {
         'queue': 'stock_quote_tasks',
         'routing_key': 'stock_quote_tasks.save_stock_quote_result'
     },
-    'husky.tasks.beat_tasks.crawl_nasdaq_stock_quote_batch': {
+    'husky.tasks.stock_quote_tasks.crawl_nasdaq_stock_quote_batch': {
         'queue': 'stock_quote_tasks',
         'routing_key': 'stock_quote_tasks.crawl_nasdaq_stock_quote_batch'
     },
-    'husky.tasks.stock_history_tasks.update_company_list': {
+    'husky.tasks.stock_history_tasks.update_all_stock_history': {
         'queue': 'stock_history_tasks',
-        'routing_key': 'stock_history_tasks.update_company_list'
+        'routing_key': 'stock_history_tasks.update_all_stock_history'
+    },
+    'husky.tasks.stock_history_tasks.parse_stock_history': {
+        'queue': 'stock_history_tasks',
+        'routing_key': 'stock_history_tasks.parse_stock_history'
     }
 }
