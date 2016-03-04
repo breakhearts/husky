@@ -1,4 +1,6 @@
 from lxml import etree
+import requests
+from husky.utils import utility
 
 REAL_TIME_QUOTE = 1
 AFTER_HOUR_QUOTE = 2
@@ -154,3 +156,46 @@ def parse_time_quote_slice_page(content):
         else:
             last = int(last[0].split("=")[-1])
     return date, data, current, first, last
+
+
+def get_company_list(exchange, timeout):
+    api = "http://www.nasdaq.com/screening/companies-by-industry.aspx?exchange={0}&render=download".format(exchange)
+    r = requests.get(api, headers={"user-agent": utility.random_ua()}, timeout=timeout)
+    if r.status_code == 200:
+        data = []
+        for line in r.content.splitlines()[1:]:
+            t = [x.strip('"') for x in line.split('",')]
+            symbol, name, last_sale, market_cap, adr_tso, ipo_year, sector, industry, summary_quote = t[:9]
+            market_cap = int(float(market_cap))
+            data.append((symbol, name, market_cap))
+        return data
+    else:
+        return None
+
+
+def get_nasdaq_company_list():
+    return get_company_list("NASDAQ", timeout =10)
+
+
+def get_nyse_company_list():
+    return get_company_list("NYSE", timeout =10)
+
+
+def get_amex_company_list():
+    return get_company_list("AMEX", timeout =10)
+
+
+def get_all_company_list():
+    company_list = get_nasdaq_company_list()
+    company_list += get_nyse_company_list()
+    company_list += get_amex_company_list()
+    t = []
+    symbols = {}
+    for symbol, name, market_cap in company_list:
+        if not symbol.isalpha():
+            continue
+        if symbol not in symbols:
+            symbols[symbol] = True
+            t.append((symbol, name, market_cap))
+    t.sort(cmp=lambda x,y : cmp(x[2] ,y[2]),reverse=True)
+    return t
