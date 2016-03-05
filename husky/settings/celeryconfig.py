@@ -19,7 +19,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'update_history': {
         'task': 'husky.tasks.stock_history_tasks.update_history',
-        'schedule': crontab(hour=0, minute=0, day_of_week='1-5')
+        'schedule': crontab(hour=0, minute=0, day_of_week='2-6')
     },
 }
 
