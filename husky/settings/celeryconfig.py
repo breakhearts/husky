@@ -13,12 +13,12 @@ BROKER_TRANSPORT_OPTIONS = {'fanout_prefix': True, 'fanout_patterns': True, 'vis
 CELERY_TIMEZONE = 'US/Eastern'
 CELERYBEAT_SCHEDULE = {
     'update_real_time_quote': {
-        'task': 'husky.tasks.beat_tasks.update_real_time_quote',
+        'task': 'husky.tasks.stock_quote_tasks.crawl_nasdaq_stock_quote_batch',
         'schedule': crontab(hour=17, minute=0, day_of_week='1-5'),
         'args': (nasdaq.REAL_TIME_QUOTE,)
     },
     'update_history': {
-        'task': 'husky.tasks.beat_tasks.update_history',
+        'task': 'husky.tasks.stock_history_tasks.update_history',
         'schedule': crontab(hour=0, minute=0, day_of_week='1-5')
     },
 }
@@ -37,15 +37,15 @@ CELERY_ROUTES = {
         'queue': 'spider_tasks',
         'routing_key': 'spider_tasks.spider_task'
     },
-    'husky.task.beat_tasks.crawl_nasdaq_stock_quote': {
+    'husky.tasks.stock_quote_tasks.crawl_nasdaq_stock_quote': {
         'queue': 'stock_quote_tasks',
         'routing_key': 'stock_quote_tasks.crawl_nasdaq_stock_quote'
     },
-    'husky.task.stock_quote_tasks.parse_stock_quote_page': {
+    'husky.tasks.stock_quote_tasks.parse_stock_quote_page': {
         'queue': 'stock_quote_tasks',
         'routing_key': 'stock_quote_tasks.parse_stock_quote_page'
     },
-    'husky.task.stock_quote_tasks.save_stock_quote_result': {
+    'husky.tasks.stock_quote_tasks.save_stock_quote_result': {
         'queue': 'stock_quote_tasks',
         'routing_key': 'stock_quote_tasks.save_stock_quote_result'
     },

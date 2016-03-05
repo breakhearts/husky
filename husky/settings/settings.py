@@ -89,4 +89,8 @@ REDIS_DB = 0
 MONGO_HOST = "192.168.1.100"
 MONGO_PORT = 27017
 
+# expires
+STOCK_QUOTE_EXPIRES = 60 * 60 * 24
+STOCK_HISTORY_EXPIRES = 60 * 60 * 24
+
 STOCK_QUOTE_ROOT = os.path.abspath(os.path.dirname(__file__) + "../../../data/stock_quotes")

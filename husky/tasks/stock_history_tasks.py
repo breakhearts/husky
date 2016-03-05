@@ -42,8 +42,9 @@ def update_all_stock_history(self):
             last_adj_close = t["adj_close"]
             last_modify_date = datetime.strptime(t["date"], "%Y-%m-%d")
         page_url = yahoo.get_history_data_url(symbol, start=last_modify_date)
-        ext={"last_adj_close": last_adj_close, "last_modify_date": last_modify_date, "stock": symbol, "retries": 0}
-        spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_PAGE_TIMEOUT, ext), link=parse_stock_history.s())
+        ext = {"last_adj_close": last_adj_close, "last_modify_date": last_modify_date, "stock": symbol, "retries": 0}
+        spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_PAGE_TIMEOUT, ext),
+                                link=parse_stock_history.s(), expires=settings.STOCK_HISTORY_EXPIRES)
         logger.debug("update stock history,symbol=%s",symbol)
 
 
@@ -63,7 +64,8 @@ def parse_stock_history(self, args):
         if ext["retries"] < settings.STOCK_SPIDER_MAX_RETRY:
             ext["retries"] += 1
             page_url = yahoo.get_history_data_url(stock, start=last_modify_date)
-            spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_PAGE_TIMEOUT, ext), link=parse_stock_history.s())
+            spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_PAGE_TIMEOUT, ext)
+                                    , link=parse_stock_history.s(), expires=settings.STOCK_HISTORY_EXPIRES)
         else:
             logger.debug("max retries failed,symbol = %s", stock)
             save_failed_history_task(stock, reason="STOCK_SPIDER_MAX_RETRY")

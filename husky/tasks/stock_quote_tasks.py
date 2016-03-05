@@ -24,9 +24,9 @@ def crawl_nasdaq_stock_quote(self, _type, stock):
         "page" : 1,
         "retries" : 0
     }
-    logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
-    spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,ext),
-                            link = parse_stock_quote_page.s())
+    logger.debug("start spider_task,type=%d,page_url=%s", _type, page_url)
+    spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT, ext),
+                            link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
 
 
 class ParseStockQuotePageTask(Task):
@@ -48,7 +48,7 @@ def parse_stock_quote_page(self, args):
             page_url = nasdaq.quote_slice_url_by_type(_type, stock, time, page)
             logger.debug("_re_crawl_page,type=%d,page_url=%s,retries=%d",_type,page_url,ext["retries"])
             spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,ext),
-                                    link = parse_stock_quote_page.s())
+                                    link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
         else:
             logger.debug("max retries failed,status_code=%d,type=%d,stock=%s,time=%d,page=%d",status_code,_type,stock,time,page)
             save_failed_time_quote_task(_type, stock, time, page, "STOCK_SPIDER_MAX_RETRY HIT")
@@ -77,7 +77,7 @@ def parse_stock_quote_page(self, args):
             }
             logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
             spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
-                                    link = parse_stock_quote_page.s())
+                                    link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
         if ext["time"] == 1:
             # start crawl other times
             for time_no in range(2, nasdaq.get_time_slice_max(_type) + 1):
@@ -91,8 +91,8 @@ def parse_stock_quote_page(self, args):
                 }
                 logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
                 spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
-                                        link = parse_stock_quote_page.s())
-    save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data))
+                                        link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
+    save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data), expires=settings.STOCK_QUOTE_EXPIRES)
 
 
 class SaveStockQuoteResultTask(Task):
