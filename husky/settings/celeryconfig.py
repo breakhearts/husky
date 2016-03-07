@@ -18,7 +18,7 @@ CELERYBEAT_SCHEDULE = {
         'args': (nasdaq.REAL_TIME_QUOTE,)
     },
     'update_history': {
-        'task': 'husky.tasks.stock_history_tasks.update_history',
+        'task': 'husky.tasks.stock_history_tasks.update_all_stock_history',
         'schedule': crontab(hour=0, minute=0, day_of_week='2-6')
     },
 }
