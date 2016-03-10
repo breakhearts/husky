@@ -41,6 +41,7 @@ def update_all_stock_history(self):
         else:
             last_adj_close = t["adj_close"]
             last_modify_date = datetime.strptime(t["date"], "%Y-%m-%d")
+            last_modify_date = last_modify_date.strftime("%Y%m%d")
         page_url = yahoo.get_history_data_url(symbol, start=last_modify_date)
         ext = {"last_adj_close": last_adj_close, "last_modify_date": last_modify_date, "stock": symbol, "retries": 0}
         spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_PAGE_TIMEOUT, ext),
