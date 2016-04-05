@@ -62,3 +62,5 @@ CELERY_ROUTES = {
         'routing_key': 'stock_history_tasks.parse_stock_history'
     }
 }
+
+CELERYD_HIJACK_ROOT_LOGGER = False

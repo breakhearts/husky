@@ -13,16 +13,16 @@ import json
 logger = get_task_logger(__name__)
 
 
-@app.task(bind = True)
+@app.task(bind=True)
 def crawl_nasdaq_stock_quote(self, _type, stock):
     logger.debug("start crawl stock quote,type=%d,stock=%s",_type,stock)
     page_url = nasdaq.quote_slice_url_by_type(_type, stock, 1, 1)
     ext = {
-        "type" : _type,
-        "stock" : stock,
-        "time" : 1,
-        "page" : 1,
-        "retries" : 0
+        "type": _type,
+        "stock": stock,
+        "time": 1,
+        "page": 1,
+        "retries": 0
     }
     logger.debug("start spider_task,type=%d,page_url=%s", _type, page_url)
     spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT, ext),
@@ -125,7 +125,7 @@ def save_failed_time_quote_task(_type, stock, _time, page, reason):
     }, reason)
 
 
-@app.task(bind = True)
+@app.task(bind=True)
 def crawl_nasdaq_stock_quote_batch(self, _type):
     mongo_model = StockQuoteTaskMongoModel(mongo_client)
     for stock in mongo_model.load_stocks():

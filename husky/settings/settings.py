@@ -55,15 +55,18 @@ LOG_SETTINGS = {
     'loggers': {
         'husky.tasks.spider_tasks': {
             'handlers': ['husky.tasks.spider_tasks'],
-            'level': 'DEBUG'
+            'level': 'DEBUG',
+            'propagate': True
         },
         'husky.tasks.stock_quote_tasks': {
             'handlers': ['husky.tasks.stock_quote_tasks'],
-            'level': 'DEBUG'
+            'level': 'DEBUG',
+            'propagate': True
         },
         'husky.tasks.stock_history_tasks': {
             'handlers': ['husky.tasks.stock_history_tasks'],
-            'level': 'DEBUG'
+            'level': 'DEBUG',
+            'propagate': True
         }
     }
 }
