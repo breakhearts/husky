@@ -36,7 +36,7 @@ class ParseStockQuotePageTask(Task):
         model.add("husky.tasks.stock_quote_tasks.parse_stock_quote_page", repr(args), repr(kwargs), repr(einfo))
 
 
-@app.task(base=ParseStockQuotePageTask, bind = True)
+@app.task(base=ParseStockQuotePageTask, bind=True)
 def parse_stock_quote_page(self, args):
     status_code, content, ext = args
     _type, stock, time, page = ext["type"], ext["stock"], ext["time"], ext["page"]
@@ -69,13 +69,13 @@ def parse_stock_quote_page(self, args):
         for page_no in range(2, last + 1):
             page_url = nasdaq.quote_slice_url_by_type(_type, stock, time, page_no)
             c_ext = {
-                "type" : _type,
-                "stock" : stock,
-                "time" : time,
-                "page" : page_no,
-                "retries" : 0
+                "type": _type,
+                "stock": stock,
+                "time": time,
+                "page": page_no,
+                "retries": 0
             }
-            logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
+            logger.debug("start spider_task,type=%d,page_url=%s", _type, page_url)
             spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
                                     link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
         if ext["time"] == 1:
@@ -83,11 +83,11 @@ def parse_stock_quote_page(self, args):
             for time_no in range(2, nasdaq.get_time_slice_max(_type) + 1):
                 page_url = nasdaq.quote_slice_url_by_type(_type, stock, time_no, 1)
                 c_ext = {
-                    "type" : _type,
-                    "stock" : stock,
-                    "time" : time_no,
-                    "page" : 1,
-                    "retries" : 0
+                    "type": _type,
+                    "stock": stock,
+                    "time": time_no,
+                    "page": 1,
+                    "retries": 0
                 }
                 logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
                 spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
@@ -102,7 +102,7 @@ class SaveStockQuoteResultTask(Task):
         model.add("husky.tasks.stock_quote_tasks.save_stock_quote_result", repr(args), repr(kwargs), repr(exc))
 
 
-@app.task(base = SaveStockQuoteResultTask, bind = True)
+@app.task(base=SaveStockQuoteResultTask, bind=True)
 def save_stock_quote_result(self, type, date, stock, time, page, total_pages, data):
     redis_model = StockQuoteRedisModel(redis_client)
     if time == 1 and page == 1:
