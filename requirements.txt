@@ -5,3 +5,4 @@ lxml>=3.4.4
 pymongo>=3.2
 kombu>=3.0.33
 eventlet>=0.18.4
+python-dateutil>=2.4.2
