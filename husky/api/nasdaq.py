@@ -1,6 +1,8 @@
 from lxml import etree
 import requests
 from husky.utils import utility
+from datetime import datetime, timedelta
+from dateutil import tz
 
 REAL_TIME_QUOTE = 1
 AFTER_HOUR_QUOTE = 2
@@ -10,11 +12,14 @@ PRE_MARKET_QUOTE = 3
 def real_time_quote_slice_url(code, time, page):
     return "http://www.nasdaq.com/symbol/%s/time-sales?time=%d&pageno=%d"%(code, time, page)
 
+
 def pre_market_quote_slice_url(code, time, page):
     return "http://www.nasdaq.com/zh/symbol/%s/premarket?time=%d&page=%d"%(code, time, page)
 
+
 def after_hour_quote_slice_url(code, time, page):
     return "http://www.nasdaq.com/zh/symbol/%s/after-hours?time=%d&page=%d"%(code, time, page)
+
 
 def quote_slice_url_by_type(type, code, time, page):
     if type == REAL_TIME_QUOTE:
@@ -24,11 +29,14 @@ def quote_slice_url_by_type(type, code, time, page):
     elif type == PRE_MARKET_QUOTE:
         return pre_market_quote_slice_url(code, time, page)
 
+
 def short_interest_url(code):
     return "http://www.nasdaq.com/symbol/%s/short-interest" % code
 
+
 def options_url(code, page):
     return "http://www.nasdaq.com/symbol/%s/option-chain?dateindex=-1&page=%d"%(code, page)
+
 
 def normalize_date(data):
     try:
@@ -38,6 +46,7 @@ def normalize_date(data):
             return normalize_date_v2(data)
         except:
             return normalize_date_v3(data)
+
 
 def normalize_date_v1(data):
     m_map = {
@@ -62,10 +71,12 @@ def normalize_date_v1(data):
     day = int(day)
     return "%d-%02d-%02d"%(year, month, day)
 
+
 def normalize_date_v2(data):
     from datetime import datetime
     t = datetime.strptime(data, "%m/%d/%Y %H:%M")
     return t.strftime("%Y-%m-%d")
+
 
 def normalize_date_v3(data):
     m_map = {
@@ -90,6 +101,7 @@ def normalize_date_v3(data):
     day = int(day)
     return "%d-%02d-%02d"%(year, month, day)
 
+
 def normalize_price(data):
     price = data.encode("utf-8")
     return price[3:-3]
@@ -97,6 +109,7 @@ def normalize_price(data):
 REAL_TIME_QUOTE_TIME_SLICE_MAX = 13
 AFTER_HOUR_QUOTE_TIME_SLICE_MAX = 8
 PRE_MARKET_QUOTE_TIME_SLICE_MAX = 11
+
 
 def get_time_slice_max(type):
     if type == REAL_TIME_QUOTE:
@@ -108,11 +121,14 @@ def get_time_slice_max(type):
     else:
         return None
 
+
 class NoTradingDataException(Exception):
     pass
 
+
 class ParseException(Exception):
     pass
+
 
 def parse_time_quote_slice_page(content):
     assert content.find("http://www.nasdaq.com") != -1
@@ -199,3 +215,51 @@ def get_all_company_list():
             t.append((symbol, name, market_cap))
     t.sort(cmp=lambda x,y : cmp(x[2] ,y[2]),reverse=True)
     return t
+
+
+def get_trading_date_skip_weekend(t):
+    if t.weekday() == 5:
+        t = (t - timedelta(days=1)).date()
+    elif t.weekday() == 6:
+        t = (t - timedelta(days=2)).date()
+    else:
+        t = t.date()
+    return t
+
+
+def get_last_real_time_date():
+    ny_now = datetime.now(tz.tzstr("EST5EDT"))
+    if (ny_now.hour == 9 and ny_now.minute < 30) or ny_now.hour < 9:
+        t = ny_now - timedelta(days=1)
+    else:
+        t = ny_now
+    return get_trading_date_skip_weekend(t)
+
+
+def get_last_pre_market_date():
+    ny_now = datetime.now(tz.tzstr("EST5EDT"))
+    if ny_now.hour < 4 or ny_now.hour == 4 and ny_now.minute <= 30:
+        t = ny_now - timedelta(days=1)
+    else:
+        t = ny_now
+    return get_trading_date_skip_weekend(t)
+
+
+def get_last_after_hour_date():
+    ny_now = datetime.now(tz.tzstr("EST5EDT"))
+    if ny_now.hour < 16 or ny_now.hour == 16 and ny_now.minute <= 30:
+        t = ny_now - timedelta(days=1)
+    else:
+        t = ny_now
+    return get_trading_date_skip_weekend(t)
+
+
+def get_last_trading_date(_type):
+    if _type == REAL_TIME_QUOTE:
+        return get_last_real_time_date()
+    elif _type == PRE_MARKET_QUOTE:
+        return get_last_pre_market_date()
+    elif _type == AFTER_HOUR_QUOTE:
+        return get_last_after_hour_date()
+    else:
+        assert False

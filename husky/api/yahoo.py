@@ -3,6 +3,7 @@ Yahoo stock api
 """
 from datetime import datetime, timedelta
 
+
 def get_history_data_url(stock, start=None, end=None):
     """
     >>> get_history_data_url("BIDU", start="20150213", end="20150914")
@@ -18,6 +19,7 @@ def get_history_data_url(stock, start=None, end=None):
     api = "http://real-chart.finance.yahoo.com/table.csv" + query
     return api
 
+
 def parse_history_data(content):
     data = []
     for line in content.splitlines()[1:]:
@@ -26,13 +28,16 @@ def parse_history_data(content):
             data.append(t)
     return data
 
+
 def headlines_url(stock):
     api = "http://finance.yahoo.com/q/h?s={0}+Headlines".format(stock)
     return api
 
+
 def press_releases(stock):
     api = "http://finance.yahoo.com/q/p?s={0}+Press+Releases".format(stock)
     return api
+
 
 def company_event(stock):
     api = "http://finance.yahoo.com/q/ce?s={0}+Company+Events".format(stock)

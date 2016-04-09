@@ -8,7 +8,6 @@ from husky.models.mongo_model import mongo_client, StockQuoteTaskMongoModel, Fai
 from husky.models.file_models import StockQuoteFileModel
 from husky.models.redis_model import redis_client, StockQuoteRedisModel
 from celery import Task
-import json
 
 logger = get_task_logger(__name__)
 
@@ -24,6 +23,8 @@ def crawl_nasdaq_stock_quote(self, _type, stock):
         "page": 1,
         "retries": 0
     }
+    redis_model = StockQuoteRedisModel(redis_client)
+    redis_model.begin_stock_task(_type, nasdaq.get_last_trading_date(_type), stock)
     logger.debug("start spider_task,type=%d,page_url=%s", _type, page_url)
     spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT, ext),
                             link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
@@ -31,6 +32,7 @@ def crawl_nasdaq_stock_quote(self, _type, stock):
 
 class ParseStockQuotePageTask(Task):
     abstract = True
+
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
         model.add("husky.tasks.stock_quote_tasks.parse_stock_quote_page", repr(args), repr(kwargs), repr(einfo))
@@ -40,17 +42,19 @@ class ParseStockQuotePageTask(Task):
 def parse_stock_quote_page(self, args):
     status_code, content, ext = args
     _type, stock, time, page = ext["type"], ext["stock"], ext["time"], ext["page"]
-    logger.debug("parse stock quote page,status_code=%d,type=%d,stock=%s,time=%d,page=%d,id=%s",status_code,_type,stock,time,page,self.request.id)
+    logger.debug("parse stock quote page,status_code=%d,type=%d,stock=%s,time=%d,page=%d,id=%s", status_code, _type,
+                 stock, time, page, self.request.id)
 
     def _re_crawl_page():
         if ext["retries"] < settings.STOCK_SPIDER_MAX_RETRY:
             ext["retries"] += 1
             page_url = nasdaq.quote_slice_url_by_type(_type, stock, time, page)
-            logger.debug("_re_crawl_page,type=%d,page_url=%s,retries=%d",_type,page_url,ext["retries"])
-            spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,ext),
+            logger.debug("_re_crawl_page,type=%d,page_url=%s,retries=%d", _type, page_url, ext["retries"])
+            spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT, ext),
                                     link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
         else:
-            logger.debug("max retries failed,status_code=%d,type=%d,stock=%s,time=%d,page=%d",status_code,_type,stock,time,page)
+            logger.debug("max retries failed,status_code=%d,type=%d,stock=%s,time=%d,page=%d", status_code, _type,
+                         stock, time, page)
             save_failed_time_quote_task(_type, stock, time, page, "STOCK_SPIDER_MAX_RETRY HIT")
 
     if status_code != 200:
@@ -89,7 +93,9 @@ def parse_stock_quote_page(self, args):
                     "page": 1,
                     "retries": 0
                 }
-                logger.debug("start spider_task,type=%d,page_url=%s",_type,page_url)
+                redis_model = StockQuoteRedisModel(redis_client)
+                redis_model.begin_stock_task(_type, nasdaq.get_last_trading_date(_type), stock)
+                logger.debug("start spider_task,type=%d,page_url=%s", _type, page_url)
                 spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
                                         link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
     save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data), expires=settings.STOCK_QUOTE_EXPIRES)
@@ -97,23 +103,25 @@ def parse_stock_quote_page(self, args):
 
 class SaveStockQuoteResultTask(Task):
     abstract = True
+
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
         model.add("husky.tasks.stock_quote_tasks.save_stock_quote_result", repr(args), repr(kwargs), repr(exc))
 
 
 @app.task(base=SaveStockQuoteResultTask, bind=True)
-def save_stock_quote_result(self, type, date, stock, time, page, total_pages, data):
+def save_stock_quote_result(self, _type, date, stock, time, page, total_pages, data):
     redis_model = StockQuoteRedisModel(redis_client)
     if time == 1 and page == 1:
-        redis_model.remove_stock(type, stock, date)
-    redis_model.save_page_result(type, stock, date, time, page, total_pages, data)
-    if redis_model.check_stock_finish(type, stock, date):
+        redis_model.remove_stock(_type, stock, date)
+    redis_model.save_page_result(_type, stock, date, time, page, total_pages, data)
+    if redis_model.check_stock_finish(_type, stock, date):
         file_model = StockQuoteFileModel(settings.STOCK_QUOTE_ROOT)
-        t = redis_model.load_stock(type, stock, date)
-        file_model.remove_stock(type, stock, date)
-        file_model.save_stock_quote(type, stock, date, t)
-    logger.debug("save stock_quote,%d %s %s %d %d %d %s", type, date, stock, time, page, total_pages, json.dumps(data))
+        t = redis_model.load_stock(_type, stock, date)
+        file_model.remove_stock(_type, stock, date)
+        file_model.save_stock_quote(_type, stock, date, t)
+        redis_model.end_stock_task(_type, data, stock)
+    logger.debug("save stock_quote,%d %s %s %d %d %d", _type, date, stock, time, page, total_pages)
 
 
 def save_failed_time_quote_task(_type, stock, _time, page, reason):

@@ -4,11 +4,14 @@ from husky.api import nasdaq
 from husky.settings import settings
 import json
 import time
+
+
 def get_redis_client(host, port, db):
     client = redis.StrictRedis(host=host, port=port, db=db)
     return client
 
 redis_client = get_redis_client(settings.REDIS_HOST, settings.REDIS_PORT, settings.REDIS_DB)
+
 
 class StockQuoteRedisModel(object):
     """
@@ -21,6 +24,11 @@ class StockQuoteRedisModel(object):
     husky:real_time_quote:[date]:[stock]:[time]:info = { //as hash table
         "total" : 15,               //total pages
         "status" : STATUS_FINISHED
+    husky:real_time_quote:[date]:tasks = {
+        "BIDU": 0
+        "FB": 1
+        "MS": 1
+    }
     """
     STATUS_INIT = 0
     STATUS_FINISHED = 1
@@ -105,6 +113,39 @@ class StockQuoteRedisModel(object):
                 data.extend(json.loads(t[str(key)]))
         data.reverse()
         return data
+
+    def _task_key(self, type, date, stock):
+        if type == nasdaq.REAL_TIME_QUOTE:
+            return "husky:real_time_quote:tasks:{0}:{1}".format(date, stock)
+        elif type == nasdaq.AFTER_HOUR_QUOTE:
+            return "husky:after_hour_quote:tasks:{0}:{1}".format(date, stock)
+        elif type == nasdaq.PRE_MARKET_QUOTE:
+            return "husky:pre_market_quote:tasks:{0}:{1}".format(date, stock)
+        return ""
+
+    def begin_stock_task(self, _type, date, stock):
+        key = self._task_key(_type, date, stock)
+        self.client.set(key, "0")
+
+    def end_stock_task(self, _type, date, stock):
+        key = self._task_key(_type, date, stock)
+        self.client.set(key, "1")
+
+    def stock_task_finished(self, _type, date, stock):
+        key = self._task_key(_type, date, stock)
+        t = self.client.get(key)
+        if t == "1":
+            return True
+        else:
+            return False
+
+    def stock_task_started(self, _type, date, stock):
+        key = self._task_key(_type, date, stock)
+        t = self.client.get(key)
+        if t == "1" or t == "0":
+            return True
+        else:
+            return False
 
 def get_timer():
     _pre_time = [0]

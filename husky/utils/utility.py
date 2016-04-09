@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+
 def wise_mk_dir(path):
     if path == "":
         return
@@ -9,6 +10,7 @@ def wise_mk_dir(path):
     if not os.path.exists(p):
         wise_mk_dir(p)
     os.mkdir(path)
+
 
 def wise_mk_dir_for_file(filepath):
     p = os.path.dirname(filepath)
@@ -30,6 +32,7 @@ UA_LIST = [
     "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; TencentTraveler 4.0)",
     "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; SE 2.X MetaSr 1.0; SE 2.X MetaSr 1.0; .NET CLR 2.0.50727; SE 2.X MetaSr 1.0)"
 ]
+
 
 def random_ua():
     import random

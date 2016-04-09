@@ -2,6 +2,7 @@ import pytest
 from husky.models.redis_model import *
 from husky.models.mongo_model import *
 from husky.models.file_models import *
+from husky.api import nasdaq
 
 @pytest.fixture(scope="module")
 def redis_client(request):
@@ -32,6 +33,12 @@ class TestStockQuoteRedisModel:
             t1 = deepcopy(t)
             t1.sort(key = lambda x:x[-1])
             assert t == t1
+            assert not stock_redis.stock_task_started(_type, nasdaq.get_last_trading_date(_type), "baba")
+            stock_redis.begin_stock_task(_type, nasdaq.get_last_trading_date(_type), "baba")
+            assert stock_redis.stock_task_started(_type, nasdaq.get_last_trading_date(_type), "baba")
+            assert not stock_redis.stock_task_finished(_type, nasdaq.get_last_trading_date(_type), "baba")
+            stock_redis.end_stock_task(_type, nasdaq.get_last_trading_date(_type), "baba")
+            assert stock_redis.stock_task_finished(_type, nasdaq.get_last_trading_date(_type), "baba")
 
 
 class TestStockQuoteMongoModel:
