@@ -120,7 +120,7 @@ def save_stock_quote_result(self, _type, date, stock, time, page, total_pages, d
         t = redis_model.load_stock(_type, stock, date)
         file_model.remove_stock(_type, stock, date)
         file_model.save_stock_quote(_type, stock, date, t)
-        redis_model.end_stock_task(_type, data, stock)
+        redis_model.end_stock_task(_type, date, stock)
     logger.debug("save stock_quote,%d %s %s %d %d %d", _type, date, stock, time, page, total_pages)
 
 
