@@ -1,5 +1,8 @@
 import os
 from husky.utils import utility
+from logging.config import dictConfig
+
+
 LOG_ROOT = os.path.abspath(os.path.dirname(__file__) + "../../../logs")
 utility.wise_mk_dir(LOG_ROOT)
 
@@ -71,7 +74,6 @@ LOG_SETTINGS = {
     }
 }
 
-from logging.config import dictConfig
 dictConfig(LOG_SETTINGS)
 
 PROXY_POOL_SERVER_HOST = "192.168.1.100"
