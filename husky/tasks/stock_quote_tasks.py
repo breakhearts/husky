@@ -14,7 +14,7 @@ logger = get_task_logger(__name__)
 
 @app.task(bind=True)
 def crawl_nasdaq_stock_quote(self, _type, stock):
-    logger.debug("start crawl stock quote,type=%d,stock=%s",_type,stock)
+    logger.debug("start crawl stock quote,type=%d,stock=%s", _type, stock)
     page_url = nasdaq.quote_slice_url_by_type(_type, stock, 1, 1)
     ext = {
         "type": _type,
@@ -36,6 +36,8 @@ class ParseStockQuotePageTask(Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
         model.add("husky.tasks.stock_quote_tasks.parse_stock_quote_page", repr(args), repr(kwargs), repr(einfo))
+        logger.error("husky.tasks.stock_quote_tasks.parse_stock_quote_page, args={0},kwargs={1},einfo={2}"
+                     .format(repr(args), repr(kwargs), repr(einfo)))
 
 
 @app.task(base=ParseStockQuotePageTask, bind=True)
@@ -98,6 +100,8 @@ def parse_stock_quote_page(self, args):
                 logger.debug("start spider_task,type=%d,page_url=%s", _type, page_url)
                 spider_task.apply_async((page_url, settings.STOCK_SPIDER_USE_PROXY, settings.STOCK_SPIDER_TASK_TIMEOUT,c_ext),
                                         link=parse_stock_quote_page.s(), expires=settings.STOCK_QUOTE_EXPIRES)
+    logger.debug("parse stock quote page ok,status_code=%d,type=%d,stock=%s,time=%d,page=%d,id=%s", status_code, _type,
+                 stock, time, page, self.request.id)
     save_stock_quote_result.apply_async((_type, date, stock, time, page, last, data), expires=settings.STOCK_QUOTE_EXPIRES)
 
 
@@ -107,6 +111,8 @@ class SaveStockQuoteResultTask(Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         model = FailedTaskModel(mongo_client)
         model.add("husky.tasks.stock_quote_tasks.save_stock_quote_result", repr(args), repr(kwargs), repr(exc))
+        logger.error("husky.tasks.stock_quote_tasks.save_stock_quote_result, args={0},kwargs={1},einfo={2}"
+                     .format(repr(args), repr(kwargs), repr(einfo)))
 
 
 @app.task(base=SaveStockQuoteResultTask, bind=True)
